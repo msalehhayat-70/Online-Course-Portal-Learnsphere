@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Viewer - LearnSphere</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #ffffff;
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        #viewer-container {
+            flex: 1;
+            overflow: auto;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #content-area {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            padding: 50px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            min-height: 200px;
+            border-radius: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            color: #dc3545;
+            padding: 50px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Mammoth generated content styles */
+        #content-area p {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        #content-area table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        #content-area td,
+        #content-area th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #content-area img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <i class="fas fa-file-alt" style="font-size: 1.5rem; color: #007bff;"></i>
+            <h1 id="doc-title">Loading Document...</h1>
+        </div>
+        <div>
+            <button id="download-btn" class="btn btn-primary"><i class="fas fa-download"></i> Download</button>
+            <button onclick="window.close()" class="btn btn-secondary"><i class="fas fa-times"></i> Close</button>
+        </div>
+    </header>
+
+    <div id="viewer-container">
+        <div id="content-area">
+            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Fetching document...</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const url = params.get('url');
+            const type = params.get('type');
+            const name = params.get('name') || 'Document';
+
+            document.title = `${name} - Viewer`;
+            document.getElementById('doc-title').textContent = name;
+
+            const userToken = localStorage.getItem('userToken');
+            if (!userToken) {
+                showError('Authentication failed. Please log in again.');
+                return;
+            }
+
+            if (!url) {
+                showError('No document URL provided.');
+                return;
+            }
+
+            // Setup Download Button
+            const downloadBtn = document.getElementById('download-btn');
+            downloadBtn.onclick = () => downloadFile(url, name, userToken);
+
+            // Handle YouTube Video (Skip fetch)
+            if (type === 'youtube') {
+                document.getElementById('download-btn').style.display = 'none'; // No download for video
+                const contentArea = document.getElementById('content-area');
+
+                let videoId = null;
+                const patterns = [
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^#&?]*).*/,
+                    /^([a-zA-Z0-9_-]{11})$/
+                ];
+                for (const pattern of patterns) {
+                    const match = url.trim().match(pattern);
+                    if (match && match[1]) { videoId = match[1]; break; }
+                }
+
+                if (videoId && videoId.length === 11) {
+                    // Use standard domain and minimal parameters to avoid Error 153
+                    const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1`;
+
+                    contentArea.innerHTML = `
+                        <div style="width:100%; height:100%; display:flex; flex-direction:column;">
+                            <div style="flex:1; background:black;">
+                                <iframe 
+                                    src="${embedUrl}" 
+                                    style="width:100%; height:100%; border:none;"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                            <div style="background:#333; padding:10px; text-align:center;">
+                                <span style="color:white; margin-right:10px;">Video not playing?</span>
+                                <a href="${url}" target="_blank" class="btn btn-primary" style="padding:5px 15px; font-size:0.8rem;">
+                                    <i class="fab fa-youtube"></i> Watch on YouTube
+                                </a>
+                            </div>
+                        </div>
+                    `;
+
+                    // Full screen style adjustment
+                    contentArea.style.padding = '0';
+                    contentArea.style.maxWidth = '100%';
+                    contentArea.style.height = '100%';
+                    contentArea.style.background = 'black';
+                } else {
+                    showError('Invalid YouTube URL');
+                    // Add direct link button
+                    document.getElementById('content-area').innerHTML += `
+                        <div style="text-align:center; margin-top:20px;">
+                            <a href="${url}" target="_blank" class="btn btn-primary">Open in YouTube</a>
+                        </div>
+                    `;
+                }
+                return; // Stop here, don't fetch
+            }
+
+            // Handle Files (Fetch required)
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load document');
+
+                const contentArea = document.getElementById('content-area');
+
+                if (type === 'docx' || name.endsWith('.docx') || name.endsWith('.doc')) {
+                    // Handle Word Document
+                    contentArea.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Converting Word Document...</div>';
+                    const arrayBuffer = await response.arrayBuffer();
+
+                    if (typeof mammoth === 'undefined') {
+                        throw new Error('Conversion library failed to load.');
+                    }
+
+                    const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                    contentArea.innerHTML = result.value;
+
+                    if (result.messages.length > 0) {
+                        console.warn('Mammoth messages:', result.messages);
+                    }
+                } else if (type === 'pdf' || name.endsWith('.pdf')) {
+                    // Handle PDF
+                    const blob = await response.blob();
+                    const objectUrl = window.URL.createObjectURL(blob);
+                    // Replace content area with full-height iframe, remove padding/shadow for PDF
+                    contentArea.style.padding = '0';
+                    contentArea.style.maxWidth = '100%';
+                    contentArea.style.height = '100%';
+                    contentArea.innerHTML = `<iframe src="${objectUrl}" type="application/pdf"></iframe>`;
+                } else {
+                    // Fallback
+                    showError('This file type cannot be previewed nicely. Please download it.');
+                }
+
+            } catch (error) {
+                console.error(error);
+                showError(`Error loading document: ${error.message}`);
+            }
+        });
+
+        function showError(msg) {
+            document.getElementById('content-area').innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                    <p>${msg}</p>
+                    <p>Try downloading the file directly.</p>
+                </div>
+            `;
+        }
+
+        function downloadFile(url, filename, token) {
+            fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => {
+                    if (!res.ok) throw new Error('Download failed');
+                    // Try getting filename from header
+                    let finalName = filename;
+                    const disposition = res.headers.get('Content-Disposition');
+                    if (disposition && disposition.includes('filename=')) {
+                        const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                        if (match && match[1]) finalName = match[1].replace(/['"]/g, '');
+                    }
+                    return res.blob().then(blob => ({ blob, finalName }));
+                })
+                .then(({ blob, finalName }) => {
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = finalName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                })
+                .catch(err => alert('Download failed: ' + err.message));
+        }
+    </script>
+</body>
+
+</html>

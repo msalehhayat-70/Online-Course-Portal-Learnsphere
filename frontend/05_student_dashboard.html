@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Learning Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Library needed to generate the PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #007bff;
+            --secondary-blue: #0056b3;
+            --dark-blue: #1d2c4d;
+            --sidebar-text: #f0f0f0;
+            --sidebar-active-bg: #2c3e6b;
+            --light-blue-bg: #e7f1ff;
+            --bg-color: #f4f7fa;
+            --white: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--dark-blue);
+            color: var(--sidebar-text);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header h2 {
+            margin-left: 10px;
+            display: inline;
+            font-size: 1.5rem;
+            color: var(--white);
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-nav i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: var(--sidebar-active-bg);
+            color: var(--white);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .content-section {
+            display: none;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .content-section h2 {
+            color: var(--dark-blue);
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--light-blue-bg);
+            padding-bottom: 10px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
+            color: var(--white);
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .stat-card p {
+            font-size: 2.2rem;
+            font-weight: bold;
+        }
+
+        .profile-item {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-item strong {
+            width: 180px;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        .profile-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            padding: 12px 22px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #profile-edit-form {
+            display: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            animation: slideIn 0.4s ease-out;
+            position: relative;
+        }
+
+        .video-modal-content {
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: #888;
+            cursor: pointer;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon.success {
+            color: var(--success-color);
+        }
+
+        .modal-icon.error {
+            color: var(--danger-color);
+        }
+
+        .modal-icon.confirm {
+            color: var(--primary-blue);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            margin-bottom: 30px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .message-card,
+        .course-card {
+            background: #fdfdff;
+            border: 1px solid #eef;
+            border-left: 4px solid var(--primary-blue);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .message-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: normal;
+        }
+
+        .course-card h3 {
+            color: var(--dark-blue);
+            margin-bottom: 10px;
+        }
+
+        .course-card p {
+            margin-bottom: 15px;
+        }
+
+        .course-card-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .course-content-list {
+            list-style: none;
+            padding: 20px 0 0 0;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .course-content-list li {
+            display: flex;
+            align-items: center;
+            padding: 12px 5px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .course-content-list li:hover {
+            background-color: #f9f9f9;
+        }
+
+        .course-content-list li i {
+            margin-right: 15px;
+            color: var(--primary-blue);
+        }
+
+        .certificate-box {
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .certificate-box.ready {
+            background-color: #e9f7ef;
+            border: 2px solid var(--success-color);
+        }
+
+        .certificate-box.not-ready {
+            background-color: #fff8e1;
+            border: 2px solid #ffc107;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: .25rem;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background-color: var(--success-color);
+            border-radius: .25rem;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            line-height: 20px;
+            transition: width 0.6s ease;
+        }
+
+        .rating-group {
+            text-align: center;
+        }
+
+        .rating-group label {
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+        }
+
+        .rating>input {
+            display: none;
+        }
+
+        .rating>label {
+            position: relative;
+            width: 1.1em;
+            font-size: 2rem;
+            color: #FFD700;
+            cursor: pointer;
+        }
+
+        .rating>label::before {
+            content: "\2605";
+            position: absolute;
+            opacity: 0;
+        }
+
+        .rating>label:hover:before,
+        .rating>label:hover~label:before {
+            opacity: 1 !important;
+        }
+
+        .rating>input:checked~label:before {
+            opacity: 1;
+        }
+
+        .rating:hover>input:checked~label:before {
+            opacity: 0.4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header"><i class="fas fa-user-graduate"></i>
+                <h2>Student Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" data-section="dashboard-section" class="active"><i
+                                class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="#" data-section="profile-section"><i class="fas fa-user-circle"></i> My Profile</a>
+                    </li>
+                    <li><a href="#" data-section="messages-section"><i class="fas fa-envelope"></i> Messages</a></li>
+                    <li><a href="#" data-section="search-section"><i class="fas fa-search"></i> Search Courses</a></li>
+                    <li><a href="#" data-section="enrolled-section"><i class="fas fa-book-open"></i> My Courses</a></li>
+                    <li><a href="#" data-section="comments-section"><i class="fas fa-comments"></i> Submit a Review</a>
+                    </li>
+                    <li><a href="#" data-section="progress-section"><i class="fas fa-chart-line"></i> Progress
+                            Tracking</a></li>
+                    <li><a href="#" id="nav-logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content" id="main-content-area">
+            <section id="dashboard-section" class="content-section active"></section>
+            <section id="profile-section" class="content-section"></section>
+            <section id="messages-section" class="content-section"></section>
+            <section id="search-section" class="content-section"></section>
+            <section id="enrolled-section" class="content-section"></section>
+            <section id="comments-section" class="content-section"></section>
+            <section id="certificate-section" class="content-section"></section>
+            <section id="progress-section" class="content-section"></section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-content"><i class="fas fa-times close-modal" onclick="hideModal()"></i><i id="modal-icon"
+                class="modal-icon"></i>
+            <h2 id="modal-title"></h2>
+            <p id="modal-message"></p>
+            <div class="modal-actions"></div>
+        </div>
+    </div>
+    <div id="video-modal" class="modal-overlay">
+        <div class="modal-content video-modal-content"><i class="fas fa-times close-modal"
+                onclick="hideVideoModal()"></i>
+            <div id="video-player-wrapper" class="video-wrapper"></div>
+        </div>
+    </div>
+    <div id="document-modal" class="modal-overlay">
+        <div class="modal-content video-modal-content"><i class="fas fa-times close-modal"
+                onclick="hideDocumentModal()"></i>
+            <h3 id="document-title"></h3>
+            <div id="document-viewer-wrapper" style="width:100%; height:500px; overflow:auto;"></div><a
+                id="document-download-link" class="btn" style="margin-top:15px;" download><i
+                    class="fas fa-download"></i> Download File</a>
+        </div>
+    </div>
+
+    <!-- Mammoth.js for Docx rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="js/student_dashboard.js"></script>
+</body>
+
+</html>

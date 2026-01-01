@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login - LearnSphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Sora:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+  <style>
+    /* --- KEEP ALL CSS THE SAME --- */
+    :root {
+      --primary-glow: #00aaff;
+      --white-text: rgba(255, 255, 255, 0.98);
+      --subtle-text: rgba(255, 255, 255, 0.7);
+      --glass-bg: rgba(15, 20, 35, 0.45);
+      --glass-border: rgba(0, 170, 255, 0.4);
+      --dark-bg: #000000;
+      --input-bg: rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Sora', sans-serif;
+      color: var(--white-text);
+      background-color: var(--dark-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .main-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+      perspective: 1500px;
+      opacity: 0;
+      animation: fadeIn 1s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .login-container-wrapper {
+      position: relative;
+      will-change: transform;
+      transition: transform 0.1s ease;
+    }
+
+    .login-container-wrapper::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 5%;
+      width: 90%;
+      height: 100%;
+      background: inherit;
+      filter: blur(20px);
+      transform: scaleY(-1) translateY(85%);
+      z-index: -1;
+      opacity: 0.15;
+      mask-image: linear-gradient(to top, black 0%, transparent 70%);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      background: var(--glass-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px) saturate(180%);
+      -webkit-backdrop-filter: blur(15px) saturate(180%);
+      border-radius: 20px;
+      box-shadow: 0 0 0 1.5px var(--glass-border), 0 20px 50px rgba(0, 0, 0, 0.5);
+      animation: pulseGlow 5s infinite ease-in-out;
+    }
+
+    .login-container h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      text-align: center;
+      margin: 0 0 35px 0;
+      text-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
+      letter-spacing: 1px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 400;
+      font-size: 0.9rem;
+      color: var(--subtle-text);
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--input-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: var(--white-text);
+      font-size: 1rem;
+      font-family: 'Sora', sans-serif;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--primary-glow);
+      box-shadow: 0 0 10px -2px var(--primary-glow);
+    }
+
+    .cta-button {
+      width: 100%;
+      padding: 15px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(90deg, #007aff, #00c6ff);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 145, 255, 0.4);
+    }
+
+    .register-link {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .register-link p {
+      margin: 0 0 15px 0;
+      color: var(--subtle-text);
+    }
+
+    .secondary-button {
+      color: var(--white-text);
+      background: transparent;
+      border: 1px solid var(--subtle-text);
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .secondary-button:hover {
+      background-color: var(--input-bg);
+      border-color: var(--white-text);
+    }
+
+    @keyframes pulseGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 1.5px var(--glass-border), 0 0 20px -10px var(--primary-glow), 0 20px 50px rgba(0, 0, 0, 0.5);
+      }
+
+      50% {
+        box-shadow: 0 0 0 1.5px var(--glass-border), 0 0 35px -10px var(--primary-glow), 0 20px 50px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="particle-canvas"></canvas>
+
+  <main class="main-container">
+    <div class="login-container-wrapper">
+      <div class="login-container">
+        <h2>Admin Login</h2>
+        <form id="adminLoginForm">
+          <div class="input-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" required />
+          </div>
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required />
+          </div>
+          <button type="submit" class="cta-button">Login</button>
+        </form>
+
+        <div class="register-link">
+          <p>Don't have an account?</p>
+          <a href="06_admin_register.html" class="secondary-button">Register Now</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let particlesArray;
+    function initParticles() {
+      particlesArray = [];
+      let num = (canvas.height * canvas.width) / 9000;
+      for (let i = 0; i < num; i++) {
+        let size = (Math.random() * 1.5) + 0.5;
+        let x = (Math.random() * (innerWidth - size * 2));
+        let y = (Math.random() * (innerHeight - size * 2));
+        let dirX = (Math.random() * 0.4) - 0.2;
+        let dirY = (Math.random() * 0.4) - 0.2;
+        particlesArray.push({ x, y, dirX, dirY, size });
+      }
+    }
+    function animateParticles() {
+      requestAnimationFrame(animateParticles);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      for (let i = 0; i < particlesArray.length; i++) {
+        let p = particlesArray[i];
+        p.x += p.dirX;
+        p.y += p.dirY;
+        if (p.x > canvas.width || p.x < 0) p.dirX = -p.dirX;
+        if (p.y > canvas.height || p.y < 0) p.dirY = -p.dirY;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2, false);
+        ctx.fillStyle = 'rgba(0, 170, 255, 0.6)';
+        ctx.fill();
+      }
+    }
+    window.addEventListener('resize', () => { canvas.width = innerWidth; canvas.height = innerHeight; initParticles(); });
+    initParticles();
+    animateParticles();
+
+    const wrapper = document.querySelector('.login-container-wrapper');
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX - window.innerWidth / 2) / 50;
+      const y = (e.clientY - window.innerHeight / 2) / 50;
+      requestAnimationFrame(() => { wrapper.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`; });
+    });
+
+    const swalTheme = { background: '#0d101a', color: '#ffffff', confirmButtonColor: '#007aff', cancelButtonColor: '#6e7881' };
+    const form = document.getElementById('adminLoginForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      if (!email || !password) {
+        Swal.fire({ ...swalTheme, icon: 'warning', title: 'Incomplete Form', text: 'Please fill out all fields.' });
+        return;
+      }
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/v1/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }) // admin_id removed
+        });
+        const data = await response.json();
+        if (response.ok && data.access_token) {
+          localStorage.setItem('adminToken', data.access_token);
+          Swal.fire({ ...swalTheme, icon: 'success', title: 'Login Successful!', text: `Welcome, ${data.full_name || 'Admin'}!`, timer: 1500, showConfirmButton: false })
+            .then(() => window.location.href = '08_admin_dashboard.html');
+        } else {
+          Swal.fire({ ...swalTheme, icon: 'error', title: 'Login Failed', text: data.detail || 'Invalid credentials.' });
+        }
+      } catch (error) {
+        Swal.fire({ ...swalTheme, icon: 'error', title: 'Oops...', text: 'An error occurred.' });
+      }
+    });
+  </script>
+</body>
+
+</html>

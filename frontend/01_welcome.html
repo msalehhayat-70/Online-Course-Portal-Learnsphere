@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LearnSphere | The Future of Learning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-glow: #00aaff;
+      --white-text: rgba(255, 255, 255, 0.98);
+      --subtle-text: rgba(255, 255, 255, 0.7);
+      --glass-bg: rgba(15, 20, 35, 0.35);
+      --glass-border: rgba(0, 170, 255, 0.5);
+      --dark-bg: #000000;
+      --button-pulse-color: rgba(0, 170, 255, 0.7);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: 'Sora', sans-serif;
+      color: var(--white-text);
+      background-color: var(--dark-bg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    /* BACKGROUND LAYERS */
+    .background-layers {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .radial-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 150vmax;
+        height: 150vmax;
+        background: radial-gradient(circle, rgba(0, 100, 180, 0.15) 0%, rgba(0, 0, 0, 0) 60%);
+        transform: translate(-50%, -50%);
+        animation: slowPulse 10s infinite ease-in-out;
+    }
+    
+    #particle-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    /* Main Section */
+    .hero-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+      padding: 40px 20px;
+      perspective: 1200px;
+    }
+
+    /* GLASS CONTAINER & REFLECTION */
+    .container-wrapper {
+        position: relative;
+        will-change: transform;
+        transition: transform 0.1s ease;
+    }
+    
+    .container-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        left: 5%;
+        width: 90%;
+        height: 100%;
+        background: inherit;
+        filter: blur(25px);
+        transform: scaleY(-1) translateY(85%);
+        z-index: -1;
+        opacity: 0.2;
+        mask-image: linear-gradient(to top, black 0%, transparent 70%);
+    }
+
+    .welcome-container {
+      position: relative;
+      text-align: center;
+      background: var(--glass-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      padding: 40px 50px;
+      border-radius: 25px;
+      max-width: 680px;
+      width: 100%;
+      box-shadow: 0 0 0 1.5px var(--glass-border), 0 20px 60px rgba(0,0,0,0.6);
+      animation: containerEntry 1s ease-out 0.2s forwards, pulseGlow 4s infinite ease-in-out;
+      opacity: 0;
+      will-change: transform, box-shadow;
+    }
+    
+    /* LOTTIE ANIMATION */
+    .lottie-animation {
+        width: 150px;
+        height: 150px;
+        margin: -20px auto 10px;
+        opacity: 0;
+        transform: scale(0.8);
+        animation: revealUp 1s ease-out 0.5s forwards;
+    }
+
+    /* TYPOGRAPHY & TEXT EFFECTS */
+    .brand-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.8rem, 10vw, 4.5rem);
+      font-weight: 900;
+      color: var(--white-text);
+      margin: 0;
+      line-height: 1.1;
+      text-shadow: 0 0 15px rgba(0, 170, 255, 0.3), 0 0 40px rgba(0, 170, 255, 0.3);
+      letter-spacing: -1px;
+      opacity: 0;
+      animation: revealUp 1s ease-out 1s forwards;
+    }
+
+    .tagline {
+      font-size: clamp(1rem, 3vw, 1.1rem);
+      font-weight: 300;
+      color: var(--subtle-text);
+      margin: 25px auto 40px;
+      max-width: 480px;
+      line-height: 1.7;
+      min-height: 54px; /* Reserve space for typewriter */
+      animation-delay: 1.5s;
+    }
+
+    /* CTA BUTTON */
+    .cta-button {
+      display: inline-block;
+      padding: 16px 45px;
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(90deg, #0088ff, #00aaff);
+      border: 1px solid var(--primary-glow);
+      border-radius: 50px;
+      text-decoration: none;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+      box-shadow: 0 0 15px -5px var(--button-pulse-color), 0 0 25px -10px var(--button-pulse-color) inset;
+      animation: pulseButton 2s infinite ease-in-out;
+      will-change: transform, box-shadow;
+    }
+    .cta-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px -5px var(--button-pulse-color), 0 0 35px -10px var(--button-pulse-color) inset;
+        animation-play-state: paused;
+    }
+
+    /* SHAPE DIVIDER */
+    .shape-divider {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        overflow: hidden;
+        line-height: 0;
+        transform: rotate(180deg);
+        z-index: 1;
+    }
+    .shape-divider svg {
+        position: relative;
+        display: block;
+        width: calc(100% + 1.3px);
+        height: 150px;
+    }
+    .shape-divider .shape-fill { fill: var(--dark-bg); }
+    
+    /* ANIMATIONS & RESPONSIVENESS */
+    @keyframes containerEntry { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 0 1.5px var(--glass-border), 0 0 25px -8px var(--primary-glow), 0 20px 60px rgba(0,0,0,0.6); }
+        50% { box-shadow: 0 0 0 1.5px var(--glass-border), 0 0 40px -8px var(--primary-glow), 0 20px 60px rgba(0,0,0,0.6); }
+    }
+    @keyframes revealUp { to { opacity: 1; transform: scale(1); } }
+    @keyframes slowPulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; } }
+    @keyframes pulseButton { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
+    .reveal { opacity: 0; transform: scale(0.9); }
+    .cta-button-wrapper { animation: revealUp 1s ease-out 2s forwards; }
+
+    @media (max-width: 768px) {
+      .welcome-container { padding: 30px 25px; }
+      .brand-name { letter-spacing: 0; }
+      .lottie-animation { width: 120px; height: 120px; margin-top: -10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="background-layers">
+    <div class="radial-glow"></div>
+    <canvas id="particle-canvas"></canvas>
+  </div>
+
+  <section class="hero-section">
+    <div class="container-wrapper">
+      <div class="welcome-container">
+        <div class="lottie-animation"></div>
+        <h1 class="brand-name">LearnSphere</h1>
+        <p class="tagline"></p>
+        <div class="cta-button-wrapper reveal">
+            <a href="#" class="cta-button" onclick="goToRoleSelection()">GET STARTED</a>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <div class="shape-divider">
+      <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-17,148.6-12.55,203.85,10.29,74.6,31.64,124.36,54,177.3,66.37,63.12,14.63,124.42,10.07,184.34-11.42,34.52-12.18,67.36-25.72,97.64-41.52V120H0V56.44Z" class="shape-fill"></path>
+      </svg>
+  </div>
+
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <script>
+    // --- LOTTIE PLAYER SETUP ---
+    const lottieContainer = document.querySelector('.lottie-animation');
+    const player = document.createElement('lottie-player');
+    player.setAttribute('src', 'https://assets5.lottiefiles.com/packages/lf20_i9mxcD.json');
+    player.setAttribute('background', 'transparent');
+    player.setAttribute('speed', '1');
+    player.setAttribute('style', 'width: 100%; height: 100%;');
+    player.setAttribute('loop', '');
+    player.setAttribute('autoplay', '');
+    lottieContainer.appendChild(player);
+
+    // --- TYPEWRITER EFFECT ---
+    const taglineEl = document.querySelector('.tagline');
+    const text = "Unlock your potential with immersive courses. Your journey to mastery starts now.";
+    let charIndex = 0;
+    
+    function typeWriter() {
+      if (charIndex < text.length) {
+        taglineEl.textContent += text.charAt(charIndex);
+        charIndex++;
+        setTimeout(typeWriter, 50);
+      }
+    }
+    setTimeout(typeWriter, 2000); // Start after initial animations
+
+    // --- PARTICLE BACKGROUND SCRIPT ---
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particlesArray;
+
+    const mouse = { x: null, y: null, radius: (canvas.height / 120) * (canvas.width / 120) };
+    
+    class Particle {
+      constructor(x, y, dirX, dirY, size, color) {
+        this.x = x; this.y = y; this.dirX = dirX; this.dirY = dirY;
+        this.size = size; this.color = color;
+        this.baseX = this.x; this.baseY = this.y;
+        this.density = (Math.random() * 30) + 1;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+        ctx.fillStyle = 'rgba(0, 170, 255, 0.6)';
+        ctx.fill();
+      }
+      update() {
+        this.x += this.dirX; this.y += this.dirY;
+        if (this.x > canvas.width + 5 || this.x < -5) this.dirX = -this.dirX;
+        if (this.y > canvas.height + 5 || this.y < -5) this.dirY = -this.dirY;
+        
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < mouse.radius + this.size) {
+            if (mouse.x < this.x && this.x < canvas.width - this.size * 10) this.x += 3;
+            if (mouse.x > this.x && this.x > this.size * 10) this.x -= 3;
+            if (mouse.y < this.y && this.y < canvas.height - this.size * 10) this.y += 3;
+            if (mouse.y > this.y && this.y > this.size * 10) this.y -= 3;
+        }
+        this.draw();
+      }
+    }
+
+    function initParticles() {
+      particlesArray = [];
+      let num = (canvas.height * canvas.width) / 9000;
+      for (let i = 0; i < num; i++) {
+        let size = (Math.random() * 1.5) + 0.5;
+        let x = (Math.random() * (innerWidth - size * 2));
+        let y = (Math.random() * (innerHeight - size * 2));
+        let dirX = (Math.random() * 0.4) - 0.2;
+        let dirY = (Math.random() * 0.4) - 0.2;
+        particlesArray.push(new Particle(x, y, dirX, dirY, size));
+      }
+    }
+
+    function connectParticles() {
+      for (let a = 0; a < particlesArray.length; a++) {
+        for (let b = a; b < particlesArray.length; b++) {
+          let dist = ((particlesArray[a].x - particlesArray[b].x) ** 2) + ((particlesArray[a].y - particlesArray[b].y) ** 2);
+          if (dist < (canvas.width / 7) * (canvas.height / 7)) {
+            let opacity = 1 - (dist / 20000);
+            ctx.strokeStyle = `rgba(0, 170, 255, ${opacity * 0.2})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+            ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    
+    function animateParticles() {
+      requestAnimationFrame(animateParticles);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+      }
+      connectParticles();
+    }
+
+    // --- EVENT LISTENERS ---
+    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+    window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+    window.addEventListener('resize', () => {
+      canvas.width = innerWidth; canvas.height = innerHeight;
+      mouse.radius = (canvas.height / 120) * (canvas.width / 120);
+      initParticles();
+    });
+    window.addEventListener('click', e => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+      for (let i = 0; i < 5; i++) {
+        particlesArray.push(new Particle(mouse.x, mouse.y, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, Math.random() * 2 + 1));
+      }
+    });
+
+    // --- 3D TILT & PARALLAX ---
+    const wrapper = document.querySelector('.container-wrapper');
+    const bgLayers = document.querySelector('.background-layers');
+    function handleMove(e) {
+      const { clientX, clientY } = e.touches ? e.touches[0] : e;
+      const x = (clientX - window.innerWidth / 2) / 40;
+      const y = (clientY - window.innerHeight / 2) / 40;
+      requestAnimationFrame(() => {
+        wrapper.style.transform = `rotateY(${x}deg) rotateX(${-y}deg) scale(1)`;
+        bgLayers.style.transform = `translateX(${-x*0.5}px) translateY(${-y*0.5}px)`;
+      });
+    }
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', handleMove);
+
+    // --- PAGE TRANSITION ---
+    function goToRoleSelection() {
+      document.body.style.opacity = '0';
+      document.body.style.transition = 'opacity 0.5s ease-out';
+      setTimeout(() => { window.location.href = "02_role_selection.html"; }, 500);
+    }
+    
+    // --- INITIALIZE ---
+    initParticles();
+    animateParticles();
+  </script>
+
+</body>
+</html>

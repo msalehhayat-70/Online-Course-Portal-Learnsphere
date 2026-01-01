@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select Your Role - LearnSphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-glow: #00aaff;
+      --white-text: rgba(255, 255, 255, 0.98);
+      --subtle-text: rgba(255, 255, 255, 0.7);
+      --glass-bg: rgba(15, 20, 35, 0.45);
+      --glass-border: rgba(0, 170, 255, 0.4);
+      --dark-bg: #000000;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Sora', sans-serif;
+      color: var(--white-text);
+      background-color: var(--dark-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    #particle-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    .main-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      text-align: center;
+      padding: 40px 20px;
+      perspective: 1500px;
+      opacity: 0;
+      animation: fadeIn 1s ease-out forwards;
+    }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    .main-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 800;
+      margin: 0 0 60px 0;
+      text-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
+      letter-spacing: 1px;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .roles-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      flex-wrap: wrap;
+    }
+    
+    .role-card {
+      position: relative;
+      padding: 35px 30px;
+      width: 300px;
+      text-decoration: none;
+      color: var(--white-text);
+      background: var(--glass-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px) saturate(180%);
+      -webkit-backdrop-filter: blur(15px) saturate(180%);
+      border-radius: 20px;
+      box-shadow: 0 0 0 1.5px var(--glass-border), 0 20px 50px rgba(0,0,0,0.5);
+      transform-style: preserve-3d;
+      will-change: transform, box-shadow;
+      transition: transform 0.4s cubic-bezier(0.1, 0.8, 0.2, 1.1),
+                  box-shadow 0.4s ease,
+                  opacity 0.4s ease;
+      animation: pulseGlow 5s infinite ease-in-out;
+    }
+
+    .role-card:hover {
+        transform: translateY(-15px) scale(1.05) rotateX(10deg) rotateY(0deg);
+        box-shadow: 0 0 0 1.5px var(--glass-border), 0 0 40px -5px var(--primary-glow), 0 35px 60px rgba(0,0,0,0.6);
+        animation-play-state: paused;
+    }
+    
+    .role-card.selected {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    .role-card.unselected {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    
+    .icon {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 20px;
+        stroke: var(--primary-glow);
+        stroke-width: 1.5;
+        fill: none;
+        filter: drop-shadow(0 0 10px var(--primary-glow));
+        transition: filter 0.3s ease;
+    }
+    .role-card:hover .icon {
+        filter: drop-shadow(0 0 15px var(--primary-glow));
+    }
+
+    .role-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin: 0 0 10px 0;
+    }
+    
+    .role-description {
+        font-weight: 300;
+        color: var(--subtle-text);
+        line-height: 1.6;
+        min-height: 50px;
+    }
+    
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 0 1.5px var(--glass-border), 0 0 20px -10px var(--primary-glow), 0 20px 50px rgba(0,0,0,0.5); }
+        50% { box-shadow: 0 0 0 1.5px var(--glass-border), 0 0 35px -10px var(--primary-glow), 0 20px 50px rgba(0,0,0,0.5); }
+    }
+    
+    @media (max-width: 700px) {
+      .roles-wrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+      }
+      .role-card { width: 90%; max-width: 320px; }
+      .role-card:hover { transform: translateY(-10px) scale(1.03); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+  </style>
+</head>
+<body>
+  
+  <canvas id="particle-canvas"></canvas>
+
+  <main class="main-container">
+    <h1 class="main-title">Select Your Role</h1>
+    <div class="roles-wrapper">
+      <a href="07_admin_login.html" class="role-card" data-role="admin" onclick="selectRole(event, this)">
+        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+        </svg>
+        <h2 class="role-name">Admin</h2>
+        <p class="role-description">Manage the platform, oversee users, and control course content.</p>
+      </a>
+
+      <a href="04_student_login.html" class="role-card" data-role="student" onclick="selectRole(event, this)">
+        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+        </svg>
+        <h2 class="role-name">Student</h2>
+        <p class="role-description">Access courses, track your progress, and start your learning journey.</p>
+      </a>
+    </div>
+  </main>
+
+  <script>
+    // --- PARTICLE BACKGROUND SCRIPT (Same as previous page for consistency) ---
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let particlesArray;
+
+    function initParticles() {
+      particlesArray = [];
+      let num = (canvas.height * canvas.width) / 9000;
+      for (let i = 0; i < num; i++) {
+        let size = (Math.random() * 1.5) + 0.5;
+        let x = (Math.random() * (innerWidth - size * 2));
+        let y = (Math.random() * (innerHeight - size * 2));
+        let dirX = (Math.random() * 0.4) - 0.2;
+        let dirY = (Math.random() * 0.4) - 0.2;
+        particlesArray.push({x, y, dirX, dirY, size});
+      }
+    }
+    
+    function animateParticles() {
+      requestAnimationFrame(animateParticles);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      for (let i = 0; i < particlesArray.length; i++) {
+        let p = particlesArray[i];
+        p.x += p.dirX;
+        p.y += p.dirY;
+        if (p.x > canvas.width || p.x < 0) p.dirX = -p.dirX;
+        if (p.y > canvas.height || p.y < 0) p.dirY = -p.dirY;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2, false);
+        ctx.fillStyle = 'rgba(0, 170, 255, 0.6)';
+        ctx.fill();
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+      initParticles();
+    });
+
+    initParticles();
+    animateParticles();
+
+    // --- ROLE SELECTION LOGIC ---
+    function selectRole(event, element) {
+      event.preventDefault(); // Prevent immediate navigation
+      
+      const cards = document.querySelectorAll('.role-card');
+      const title = document.querySelector('.main-title');
+      const destination = element.href;
+      
+      cards.forEach(card => {
+        if (card === element) {
+          card.classList.add('selected');
+        } else {
+          card.classList.add('unselected');
+        }
+      });
+      
+      title.style.opacity = '0';
+      title.style.transform = 'translateY(-20px)';
+
+      // Wait for animation, then navigate
+      setTimeout(() => {
+        document.body.style.transition = 'opacity 0.4s ease-out';
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          window.location.href = destination;
+        }, 400);
+      }, 500);
+    }
+  </script>
+
+</body>
+</html>

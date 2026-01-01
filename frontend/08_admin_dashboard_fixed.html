@@ -1,0 +1,47 @@
+// PASTE THIS CODE TO REPLACE LINES 389-393 in 08_admin_dashboard.html
+
+if (action === "allow-cert") {
+// First, fetch all courses
+fetch(`${API_BASE_URL}/admin/courses/`, { headers: getAuthHeaders() })
+.then(res => res.json())
+.then(courses => {
+if (courses.length === 0) {
+showModal('error', 'No Courses', 'Please create at least one course first.');
+return;
+}
+
+// Create a simple prompt with course list
+let courseList = 'Available courses:\n\n';
+courses.forEach((c, index) => {
+courseList += `${index + 1}. ${c.title}\n`;
+});
+courseList += '\nEnter the course number:';
+
+const courseNum = prompt(courseList);
+if (!courseNum) return;
+
+const courseIndex = parseInt(courseNum) - 1;
+if (courseIndex < 0 || courseIndex>= courses.length) {
+    showModal('error', 'Invalid Selection', 'Please enter a valid course number.');
+    return;
+    }
+
+    const selectedCourse = courses[courseIndex];
+    const formData = new FormData();
+    formData.append('course_id', selectedCourse._id);
+
+    fetch(`${API_BASE_URL}/admin/students/${id}/allow-certificate`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+    body: formData
+    })
+    .then(res => {
+    if(!res.ok) throw new Error();
+    showModal('success', 'Success', `Certificate granted for ${selectedCourse.title}`);
+    target.disabled = true;
+    target.textContent = 'Allowed';
+    })
+    .catch(() => showModal('error', 'Error', 'Action failed.'));
+    })
+    .catch(() => showModal('error', 'Error', 'Could not load courses.'));
+    }
